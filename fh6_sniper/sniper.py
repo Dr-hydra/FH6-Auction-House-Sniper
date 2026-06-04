@@ -69,7 +69,7 @@ class Sniper:
     """Drives the auction house loop through a GameIO."""
 
     def __init__(self, io, cfg, clock=time.monotonic, sleeper=time.sleep,
-                 on_purchase=None, on_status=None, on_stats=None):
+                 on_purchase=None, on_status=None, on_stats=None, tr=None):
         self.io = io
         self.cfg = cfg
         self.clock = clock
@@ -77,6 +77,7 @@ class Sniper:
         self.on_purchase = on_purchase
         self.on_status = on_status
         self.on_stats = on_stats
+        self.tr = tr or (lambda key, **kwargs: key)
         self.cars_bought = 0
         self.searches = 0
         self.failed_buyouts = 0
@@ -96,10 +97,13 @@ class Sniper:
     def request_stop(self) -> None:
         self._stop = True
 
-    def _status(self, text: str) -> None:
+    def _status(self, text: str, state: str = "running") -> None:
         log.info("[status] %s", text)
         if self.on_status:
-            self.on_status(text)
+            self.on_status(text, state)
+
+    def _status_key(self, key: str, state: str = "running", **kwargs) -> None:
+        self._status(self.tr(key, **kwargs), state)
 
     def _emit_stats(self) -> None:
         if self.on_stats:
@@ -117,7 +121,7 @@ class Sniper:
             return
         if self.io.focused():
             return
-        self._status("Paused: FH6 not focused")
+        self._status_key("status.paused_focus", state="paused")
         while not self.io.focused():
             if self._stop:
                 return
@@ -129,6 +133,13 @@ class Sniper:
         if self._stop:
             return
         self.io.press(name, times)
+
+    def _screen(self, targets=None) -> Screen:
+        """Identify the screen only after the game is actually foreground."""
+        self._guard_focus()
+        if self._stop:
+            return Screen.UNKNOWN
+        return self.io.screen(targets=targets)
 
     def _wait_for_populated_slots(self, timeout: float) -> bool:
         """Block up to `timeout` for FH6 to render at least one card.
@@ -176,7 +187,7 @@ class Sniper:
         new_value = not cfg.moving_background
         try:
             candidate = vision.load_templates(
-                paths.app_dir() / cfg.template_dir,
+                paths.app_dir() / cfg.effective_template_dir(),
                 moving_background=new_value)
         except Exception:
             log.exception("auto-toggle: failed to load alternate templates")
@@ -200,7 +211,7 @@ class Sniper:
         log.info("auto-toggle moving_background -> %s "
                  "(verified against frame; templates swapped, "
                  "saved to config.json)", new_value)
-        self._status(f"Auto-toggled moving background -> {new_value}")
+        self._status_key("status.auto_toggled_bg", value=new_value)
         return True
 
     def wait_for(self, screens: set, timeout: float):
@@ -215,7 +226,7 @@ class Sniper:
             if self._stop:
                 return None
             deadline += self.clock() - before
-            current = self.io.screen(targets=screens)
+            current = self._screen(targets=screens)
             if current in screens:
                 log.info("wait_for %s -> %s", _names(screens), current.name)
                 return current
@@ -237,7 +248,7 @@ class Sniper:
             while self.clock() < deadline:
                 if self._stop:
                     return None
-                s = self.io.screen(targets=inner_targets)
+                s = self._screen(targets=inner_targets)
                 if s in targets:
                     return s
                 if s != from_screen:
@@ -247,7 +258,7 @@ class Sniper:
 
     def _goto_search_config(self) -> bool:
         """Get to the Search config screen. Returns success."""
-        s = self.io.screen()
+        s = self._screen()
         for _ in range(10):
             if self._stop:
                 return False
@@ -259,24 +270,24 @@ class Sniper:
                 return self._enter_search_from_landing(known=s)
             if s == Screen.UNKNOWN:
                 self.sleeper(0.3)
-                s = self.io.screen()
+                s = self._screen()
                 continue
             self._oriented = True
             self._press("esc")
             s = self._await_settle(prev=s)
         if self._oriented:
-            self._status("Lost: start the bot in the Auction House")
+            self._status_key("status.lost_auction_house", state="stopped")
         else:
-            self._status("Lost: set game language to English")
+            self._status_key("status.lost_language", state="stopped")
         return False
 
     def _enter_search_from_landing(self, known=None) -> bool:
         """From the AH landing menu, open Search Auctions."""
-        self._status("Opening Search Auctions")
+        self._status_key("status.opening_search")
         for attempt in range(1, 5):
             if self._stop:
                 return False
-            s = known if known is not None else self.io.screen()
+            s = known if known is not None else self._screen()
             known = None
             log.info("enter_search attempt %d: screen=%s", attempt, s.name)
             if s == Screen.SEARCH_CONFIG:
@@ -316,8 +327,8 @@ class Sniper:
         (e.g. the Place Bid dialog) and need to back out. ESC only ever
         closes popups, never confirms anything.
         """
-        self._status("Recovering")
-        s = self.io.screen()
+        self._status_key("status.recovering")
+        s = self._screen()
         unknown_streak = 0
         for _ in range(10):
             if self._stop:
@@ -332,7 +343,7 @@ class Sniper:
                     s = self._await_settle(prev=s)
                     continue
                 self.sleeper(0.3)
-                s = self.io.screen()
+                s = self._screen()
                 continue
             unknown_streak = 0
             self._press("esc")
@@ -348,14 +359,14 @@ class Sniper:
             if self._stop:
                 return Screen.UNKNOWN
             self._poll_delay()
-            s = self.io.screen()
+            s = self._screen()
             if s != Screen.UNKNOWN and s != prev:
                 return s
         return Screen.UNKNOWN
 
     def _back_to_landing(self, known=None) -> None:
         """ESC out to the AH landing menu, however many screens deep."""
-        s = known if known is not None else self.io.screen()
+        s = known if known is not None else self._screen()
         for _ in range(6):
             if self._stop:
                 return
@@ -363,7 +374,7 @@ class Sniper:
                 return
             if s == Screen.UNKNOWN:
                 self.sleeper(0.3)
-                s = self.io.screen()
+                s = self._screen()
                 continue
             self._press("esc")
             s = self._await_settle(prev=s)
@@ -375,11 +386,11 @@ class Sniper:
         Returns "no_cars" - the car was sold before we could snipe it,
         which is a missed-search, not a failed buyout.
         """
-        self._status("Listing already sold, skipping")
+        self._status_key("status.listing_sold")
         for _ in range(6):
             if self._stop:
                 return "recover_failed"
-            if self.io.screen() == Screen.AH_LANDING:
+            if self._screen() == Screen.AH_LANDING:
                 return "no_cars"
             self._press("esc")
             self.sleeper(0.6)
@@ -414,7 +425,7 @@ class Sniper:
             if self._stop:
                 return None
             deadline += self.clock() - before
-            s = self.io.screen(targets=targets)
+            s = self._screen(targets=targets)
             if s in (Screen.BUYOUT_SUCCESS, Screen.BUYOUT_FAILED):
                 return s
             if s == Screen.BUY_OUT and enter_attempts < 4:
@@ -432,7 +443,7 @@ class Sniper:
     def _collect(self) -> None:
         """Collect a won car. The Claim Car popup has two stages that both
         read as CLAIM_CAR; press Enter until the screen leaves it."""
-        self._status("Collecting car")
+        self._status_key("status.collecting")
         if self._press_until("y", Screen.RESULTS_HAS_CARS,
                              {Screen.AUCTION_OPTIONS}) is None:
             return
@@ -443,7 +454,7 @@ class Sniper:
         while self.clock() < deadline:
             if self._stop:
                 return
-            s = self.io.screen()
+            s = self._screen()
             if s == Screen.CLAIM_CAR:
                 self._press("enter")
                 self.sleeper(1.0)
@@ -462,7 +473,7 @@ class Sniper:
         if not self._goto_search_config():
             return "recover_failed"
 
-        self._status("Searching")
+        self._status_key("status.searching")
         if not self._navigate_to_confirm():
             return self._recover()
         result = self._press_until(
@@ -481,16 +492,16 @@ class Sniper:
 
         slot = self.io.first_buyable_slot()
         if slot == 0:
-            self._status("All listings sold, skipping")
+            self._status_key("status.all_sold")
             self._back_to_landing(known=result)
             return "no_cars"
 
-        self._status("Car found, buying out")
+        self._status_key("status.car_found")
         for _ in range(slot - 1):
             self._press("down")
 
         if slot > 1 and self.io.first_buyable_slot() != slot:
-            self._status("Listing sold during navigation, skipping")
+            self._status_key("status.sold_during_nav")
             self._back_to_landing(known=result)
             return "no_cars"
 
@@ -554,10 +565,10 @@ class Sniper:
         """
         self.started_at = self.clock()
         log.info("=== sniper started ===")
-        self._status("Running")
+        self._status_key("status.running")
         while not self._stop:
             if self._auto_stop_reached():
-                self._status("Auto-stop limit reached")
+                self._status_key("status.auto_stop", state="stopped")
                 return "auto_stop"
             self._guard_focus()
             if self._stop:
@@ -569,19 +580,21 @@ class Sniper:
             if outcome == "recover_failed":
                 self._emit_stats()
                 if self._oriented:
-                    self._status("Stopped: could not recover")
+                    self._status_key("status.stopped_recover",
+                                     state="stopped")
                 else:
-                    self._status("Stopped: set game language to English")
+                    self._status_key("status.stopped_language",
+                                     state="stopped")
                 return "recover_failed"
             if outcome == "failed":
                 self.failed_buyouts += 1
             if outcome == "bought":
                 self.cars_bought += 1
                 loop_s = self.clock() - t0
-                self._status(f"Bought {self.cars_bought} car(s)")
+                self._status_key("status.bought", count=self.cars_bought)
                 if self.on_purchase:
                     self.on_purchase(loop_s, self.cars_bought)
             self._emit_stats()
             self.sleeper(self.cfg.loop_pace_s)
-        self._status("Stopped")
+        self._status_key("status.stopped", state="stopped")
         return "stopped"

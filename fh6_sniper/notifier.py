@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import datetime as dt
 from pathlib import Path
+from .i18n import translate
 
 
 def log_purchase(log_path, outcome: str, loop_seconds: float,
@@ -22,7 +23,8 @@ def log_purchase(log_path, outcome: str, loop_seconds: float,
         ])
 
 
-def notify_success(car_count: int, sound: bool, toast: bool) -> None:
+def notify_success(car_count: int, sound: bool, toast: bool,
+                   language: str = "zh-CN") -> None:
     """Beep + Windows toast after a successful buy."""
     if sound:
         try:
@@ -33,7 +35,7 @@ def notify_success(car_count: int, sound: bool, toast: bool) -> None:
     if toast:
         try:
             from win11toast import toast as show_toast
-            show_toast("FH6 Sniper",
-                       f"Car bought ({car_count} this session)")
+            show_toast(translate(language, "toast.title"),
+                       translate(language, "toast.bought", count=car_count))
         except Exception:
             pass

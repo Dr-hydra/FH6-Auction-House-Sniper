@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, asdict
 from pathlib import Path
+from .i18n import DEFAULT_LANGUAGE, normalize_language, template_dir_for_language
 
 DEFAULT_CONFIG_PATH = Path("config.json")
 
 
 @dataclass
 class Config:
+    language: str = DEFAULT_LANGUAGE
     window_title: str = "Forza Horizon 6"
     resolution: tuple = (1920, 1080)
     match_threshold: float = 0.80
@@ -67,6 +69,12 @@ class Config:
             return self.hdr_lime_hsv_lower, self.hdr_lime_hsv_upper
         return self.lime_hsv_lower, self.lime_hsv_upper
 
+    def effective_template_dir(self) -> str:
+        """Resolve the template directory for the selected UI/game language."""
+        if self.template_dir not in ("templates", "templates_zh-CN"):
+            return self.template_dir
+        return template_dir_for_language(self.language)
+
 
 _TUPLE_FIELDS = {
     name for name, f in Config.__dataclass_fields__.items()
@@ -86,6 +94,7 @@ def load_config(path=DEFAULT_CONFIG_PATH) -> Config:
             data[key] = tuple(data[key])
     known = set(Config.__dataclass_fields__)
     cfg = Config(**{k: v for k, v in data.items() if k in known})
+    cfg.language = normalize_language(getattr(cfg, "language", None))
     # Preserve any extra keys as attributes on cfg. Lets a private config.json
     # carry dev / power-user flags (e.g. overlay_capturable) without those
     # keys ever appearing in a freshly auto-generated config.
@@ -101,6 +110,7 @@ def save_config(cfg: Config, path=DEFAULT_CONFIG_PATH) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     data = asdict(cfg)
+    data["language"] = normalize_language(data.get("language"))
     declared = set(Config.__dataclass_fields__)
     for key, value in cfg.__dict__.items():           # round-trip extras
         if key not in declared:

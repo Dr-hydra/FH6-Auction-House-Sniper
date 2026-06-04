@@ -163,6 +163,7 @@ TEMPLATE_REGIONS = {
 _FULL_RES_TEMPLATES = {
     "buy_out.png", "buy_out_bgoff.png",
     "buy_out_progress.png", "buy_out_progress_bgoff.png",
+    "ah_landing.png",
 }
 
 

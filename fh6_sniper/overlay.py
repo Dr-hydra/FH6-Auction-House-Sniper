@@ -3,6 +3,7 @@ from __future__ import annotations
 import ctypes
 import time
 import tkinter as tk
+from .i18n import SUPPORTED_LANGUAGES, normalize_language, translate
 
 _BG       = "#15161a"
 _CARD     = "#1e1f25"
@@ -17,38 +18,43 @@ _STOP     = "#e0524b"
 _STOP_HV  = "#c43f39"
 _START_HV = "#b0d800"
 
-_STOPPED_WORDS = ("idle", "stopped", "auto-stop", "lost", "could not", "crashed")
+_STOPPED_WORDS = (
+    "idle", "stopped", "auto-stop", "lost", "could not", "crashed",
+    "空闲", "停止", "已迷失", "无法", "崩溃",
+)
 
 _SETTINGS_FIELDS = (
-    # (group, key, label, kind, options)
-    ("FEEDBACK",         "collect_after_buyout",   "Collect won vehicles automatically", "bool", None),
-    ("FEEDBACK",         "moving_background",      "Moving background mode (FH6 video)", "bool", None),
-    ("FEEDBACK",         "notify_sound",           "Play success beep sounds",           "bool", None),
-    ("FEEDBACK",         "notify_toast",           "Windows toast on success",           "bool", None),
-    ("FEEDBACK",         "hdr_mode",               "HDR mode (widens lime detection)",   "bool", None),
-    ("FEEDBACK",         "overlay_capturable",     "Show overlay in screenshots & recordings", "bool", None),
-    ("FEEDBACK",         "win32_api_input",        "Win32 API input (background key presses)", "bool", None),
-    ("SNIPER BEHAVIOUR", "match_threshold",        "Match threshold",        "slider", (0.50, 1.00, 0.01)),
-    ("SNIPER BEHAVIOUR", "loop_pace_s",            "Loop pace (seconds)",    "float",  None),
-    ("SNIPER BEHAVIOUR", "buyout_select_delay_ms", "Buyout select delay (ms)", "int",  None),
-    ("AUTO-STOP",        "max_cars",               "Max cars",               "int",    None),
-    ("AUTO-STOP",        "max_minutes",            "Max minutes",            "float",  None),
-    ("HOTKEYS",          "hotkey_start_stop",      "Start / stop hotkey",    "str",    None),
-    ("HOTKEYS",          "hotkey_panic",           "Panic stop hotkey",      "str",    None),
+    # (group_key, key, label_key, kind, options)
+    ("settings.group.general",   "language",              "settings.language",              "choice", SUPPORTED_LANGUAGES),
+    ("settings.group.feedback",  "collect_after_buyout",  "settings.collect_after_buyout",  "bool",   None),
+    ("settings.group.feedback",  "moving_background",     "settings.moving_background",     "bool",   None),
+    ("settings.group.feedback",  "notify_sound",          "settings.notify_sound",          "bool",   None),
+    ("settings.group.feedback",  "notify_toast",          "settings.notify_toast",          "bool",   None),
+    ("settings.group.feedback",  "hdr_mode",              "settings.hdr_mode",              "bool",   None),
+    ("settings.group.feedback",  "overlay_capturable",    "settings.overlay_capturable",    "bool",   None),
+    ("settings.group.feedback",  "win32_api_input",       "settings.win32_api_input",       "bool",   None),
+    ("settings.group.behaviour", "match_threshold",       "settings.match_threshold",       "slider", (0.50, 1.00, 0.01)),
+    ("settings.group.behaviour", "loop_pace_s",           "settings.loop_pace_s",           "float",  None),
+    ("settings.group.behaviour", "buyout_select_delay_ms", "settings.buyout_select_delay_ms", "int",    None),
+    ("settings.group.auto_stop", "max_cars",              "settings.max_cars",              "int",    None),
+    ("settings.group.auto_stop", "max_minutes",           "settings.max_minutes",           "float",  None),
+    ("settings.group.hotkeys",   "hotkey_start_stop",     "settings.hotkey_start_stop",     "str",    None),
+    ("settings.group.hotkeys",   "hotkey_panic",          "settings.hotkey_panic",          "str",    None),
 )
 
 
 class Overlay:
     """Tk status HUD. run() blocks on the tk main loop."""
 
-    def __init__(self, hide_from_capture: bool = True):
+    def __init__(self, hide_from_capture: bool = True, language: str = "zh-CN"):
+        self.language = normalize_language(language)
         self.root = tk.Tk()
-        self.root.title("FH6 Sniper")
+        self.root.title(self.tr("app.title"))
         self.root.attributes("-topmost", True)
         self.root.overrideredirect(True)
         self.root.configure(bg=_BG)
 
-        self._status_var = tk.StringVar(value="Idle")
+        self._status_var = tk.StringVar(value=self.tr("status.idle"))
         self._bought_var = tk.StringVar(value="0")
         self._searches_var = tk.StringVar(value="0")
         self._fails_var = tk.StringVar(value="0")
@@ -61,7 +67,7 @@ class Overlay:
         self._save_callback = None
         self._tab_widgets = {}
         self._tab_frames = {}
-        self._active_tab = "STATUS"
+        self._active_tab = "status"
         self._field_vars = {}
         self._field_widgets = {}
         self._threshold_label = None
@@ -74,11 +80,14 @@ class Overlay:
         self._settings_scrollbar = None
 
         self._build()
-        self._show_tab("STATUS")
+        self._show_tab("status")
         self.root.update_idletasks()
         self.root.geometry(f"344x{self.root.winfo_reqheight()}+24+24")
         self.set_capturable(not hide_from_capture)
         self._tick()
+
+    def tr(self, key: str, **kwargs) -> str:
+        return translate(self.language, key, **kwargs)
 
     def set_capturable(self, capturable: bool) -> None:
         """Toggle whether the overlay appears in screen captures.
@@ -130,16 +139,17 @@ class Overlay:
         self._build_status_tab(self._body)
         self._build_settings_tab(self._body)
 
-        tk.Label(root, text="F8  start / stop          F9  panic",
+        tk.Label(root, text=self.tr("footer.hotkeys"),
                  bg=_BG, fg=_DIM, font=("Segoe UI", 8)).pack(pady=(12, 15))
 
     def _build_tab_bar(self, root):
         bar = tk.Frame(root, bg=_BG)
         bar.pack(fill="x", padx=18, pady=(8, 0))
-        for tab in ("STATUS", "SETTINGS"):
+        for tab, label_key in (("status", "tab.status"),
+                               ("settings", "tab.settings")):
             cell = tk.Frame(bar, bg=_BG)
             cell.pack(side="left", expand=True, fill="x")
-            lbl = tk.Label(cell, text=tab, bg=_BG, fg=_DIM,
+            lbl = tk.Label(cell, text=self.tr(label_key), bg=_BG, fg=_DIM,
                            font=("Segoe UI", 9, "bold"),
                            pady=8, cursor="hand2")
             lbl.pack(fill="x")
@@ -160,7 +170,7 @@ class Overlay:
         self._build_stats(frame)
 
         self._btn = tk.Button(
-            frame, text="START", font=("Segoe UI", 10, "bold"),
+            frame, text=self.tr("button.start"), font=("Segoe UI", 10, "bold"),
             relief="flat", bd=0, highlightthickness=0, cursor="hand2",
             height=2)
         self._btn.pack(fill="x", padx=18, pady=(14, 0))
@@ -169,15 +179,15 @@ class Overlay:
         self._btn.bind("<Leave>",
                        lambda _e: self._btn.config(bg=self._btn_base))
         self._set_button(running=False)
-        self._tab_frames["STATUS"] = frame
+        self._tab_frames["status"] = frame
 
     def _build_stats(self, parent):
         card = tk.Frame(parent, bg=_CARD)
         card.pack(fill="x", padx=18, pady=(13, 0))
-        cells = (("BOUGHT", self._bought_var, _LIME),
-                 ("SEARCHES", self._searches_var, _TEXT),
-                 ("FAILS", self._fails_var, _RED),
-                 ("UPTIME", self._time_var, _TEXT))
+        cells = ((self.tr("stats.bought"), self._bought_var, _LIME),
+                 (self.tr("stats.searches"), self._searches_var, _TEXT),
+                 (self.tr("stats.fails"), self._fails_var, _RED),
+                 (self.tr("stats.uptime"), self._time_var, _TEXT))
         for i, (caption, var, color) in enumerate(cells):
             if i:
                 tk.Frame(card, bg=_DIVIDER, width=1).pack(
@@ -227,7 +237,7 @@ class Overlay:
             buckets[g].append((key, label, kind, opts))
 
         for group in order:
-            if group == "FEEDBACK":
+            if group == "settings.group.feedback":
                 self._build_feedback_section(
                     self._settings_interior, group, buckets[group])
             else:
@@ -241,7 +251,7 @@ class Overlay:
         self._save_msg_label.pack(fill="x", padx=18, pady=(8, 0))
 
         self._save_btn = tk.Button(
-            frame, text="SAVE SETTINGS", font=("Segoe UI", 10, "bold"),
+            frame, text=self.tr("button.save"), font=("Segoe UI", 10, "bold"),
             relief="flat", bd=0, highlightthickness=0, cursor="hand2",
             bg=_LIME, fg=_BG, activebackground=_START_HV,
             activeforeground=_BG, height=2, command=self._on_save_clicked)
@@ -250,7 +260,7 @@ class Overlay:
                             lambda _e: self._save_btn.config(bg=_START_HV))
         self._save_btn.bind("<Leave>",
                             lambda _e: self._save_btn.config(bg=_LIME))
-        self._tab_frames["SETTINGS"] = frame
+        self._tab_frames["settings"] = frame
 
     def _build_section_header(self, parent, title, with_chevron=False):
         """Builds a section header. Returns (header_frame, chevron_or_None)."""
@@ -262,7 +272,7 @@ class Overlay:
             chevron = tk.Label(header, text="▶", bg=_BG, fg=_LIME,
                                font=("Segoe UI", 9), cursor="hand2")
             chevron.pack(side="right")
-        tk.Label(header, text=title, bg=_BG, fg=_LIME,
+        tk.Label(header, text=self.tr(title), bg=_BG, fg=_LIME,
                  font=("Segoe UI", 9, "bold"), anchor="w",
                  cursor=cursor).pack(side="left", fill="x", expand=True)
         tk.Frame(parent, bg=_DIVIDER, height=1).pack(
@@ -296,6 +306,8 @@ class Overlay:
                 row = tk.Frame(content, bg=_BG)
                 row.pack(fill="x", padx=18, pady=(3, 0))
                 self._make_check_widget(row, key, label)
+            elif kind == "choice":
+                self._build_choice(content, key, label, opts)
             else:
                 self._build_entry(content, key, label, kind)
 
@@ -320,7 +332,8 @@ class Overlay:
     def _build_slider(self, parent, key, label, lo, hi, step):
         row = tk.Frame(parent, bg=_BG)
         row.pack(fill="x", padx=18, pady=(6, 0))
-        value_lbl = tk.Label(row, text=f"{label.upper()} ({lo:.2f})",
+        label_text = self.tr(label)
+        value_lbl = tk.Label(row, text=f"{label_text.upper()} ({lo:.2f})",
                              bg=_BG, fg=_DIM, font=("Segoe UI", 8),
                              anchor="w")
         value_lbl.pack(fill="x")
@@ -349,7 +362,7 @@ class Overlay:
             canvas.create_oval(x - r, cy - r, x + r, cy + r,
                                fill=_LIME, outline=_BG, width=2)
             value_lbl.config(
-                text=f"{label.upper()} ({float(var.get()):.2f})")
+                text=f"{label_text.upper()} ({float(var.get()):.2f})")
 
         def _from_x(e):
             w = max(1, canvas.winfo_width())
@@ -371,7 +384,7 @@ class Overlay:
     def _build_entry(self, parent, key, label, kind):
         row = tk.Frame(parent, bg=_BG)
         row.pack(fill="x", padx=18, pady=(6, 0))
-        tk.Label(row, text=label.upper(), bg=_BG, fg=_DIM,
+        tk.Label(row, text=self.tr(label).upper(), bg=_BG, fg=_DIM,
                  font=("Segoe UI", 8), anchor="w").pack(fill="x")
         var = tk.StringVar()
         entry = tk.Entry(row, textvariable=var, bg=_CARD, fg=_TEXT,
@@ -385,6 +398,23 @@ class Overlay:
         self._field_widgets[key] = entry
         var._kind = kind        # tag for parsing on save
 
+    def _build_choice(self, parent, key, label, options):
+        row = tk.Frame(parent, bg=_BG)
+        row.pack(fill="x", padx=18, pady=(6, 0))
+        tk.Label(row, text=self.tr(label).upper(), bg=_BG, fg=_DIM,
+                 font=("Segoe UI", 8), anchor="w").pack(fill="x")
+        var = tk.StringVar()
+        menu = tk.OptionMenu(row, var, *options)
+        menu.configure(bg=_CARD, fg=_TEXT, activebackground=_DIVIDER,
+                       activeforeground=_TEXT, relief="flat",
+                       highlightthickness=1, highlightbackground=_DIVIDER,
+                       font=("Segoe UI", 10), cursor="hand2")
+        menu["menu"].configure(bg=_CARD, fg=_TEXT, activebackground=_DIVIDER,
+                               activeforeground=_TEXT)
+        menu.pack(fill="x", pady=(2, 0))
+        self._field_vars[key] = var
+        self._field_widgets[key] = menu
+
     def _make_check_widget(self, parent, key, label):
         """Build a checkbox into parent. Caller is responsible for placement."""
         var = tk.BooleanVar(value=False)
@@ -393,7 +423,7 @@ class Overlay:
                        cursor="hand2")
         box.pack_propagate(False)
         box.pack(side="right", padx=(6, 2))
-        text = tk.Label(parent, text=label.upper(), bg=_BG, fg=_TEXT,
+        text = tk.Label(parent, text=self.tr(label).upper(), bg=_BG, fg=_TEXT,
                         font=("Segoe UI", 8), anchor="w", cursor="hand2",
                         wraplength=120, justify="left")
         text.pack(side="left", fill="x", expand=True)
@@ -423,7 +453,7 @@ class Overlay:
         self._tab_frames[tab].pack(fill="both", expand=True)
         self._active_tab = tab
         try:
-            if tab == "SETTINGS":
+            if tab == "settings":
                 self._refit_settings()
                 self.root.bind_all("<MouseWheel>", self._on_wheel_settings)
             else:
@@ -484,9 +514,9 @@ class Overlay:
 
     def _set_button(self, running: bool):
         if running:
-            text, base, hover, fg = "STOP", _STOP, _STOP_HV, "#ffffff"
+            text, base, hover, fg = self.tr("button.stop"), _STOP, _STOP_HV, "#ffffff"
         else:
-            text, base, hover, fg = "START", _LIME, _START_HV, _BG
+            text, base, hover, fg = self.tr("button.start"), _LIME, _START_HV, _BG
         self._btn_base, self._btn_hover = base, hover
         self._btn.config(text=text, bg=base, fg=fg,
                          activebackground=hover, activeforeground=fg)
@@ -500,9 +530,9 @@ class Overlay:
             return "stopped"
         return "running"
 
-    def _apply_status(self, text: str):
+    def _apply_status(self, text: str, state: str | None = None):
         self._status_var.set(text)
-        state = self._state_of(text)
+        state = state or self._state_of(text)
         self._dot.config(
             fg={"running": _LIME, "paused": _AMBER, "stopped": _DIM}[state])
         self._status.config(
@@ -545,8 +575,8 @@ class Overlay:
                 var.set(str(value))
         if self._threshold_label is not None:
             v = float(self._field_vars["match_threshold"].get())
-            self._threshold_label.config(
-                text=f"MATCH THRESHOLD ({v:.2f})")
+            label = self.tr("settings.match_threshold").upper()
+            self._threshold_label.config(text=f"{label} ({v:.2f})")
 
     def on_save(self, callback) -> None:
         """Wire SAVE SETTINGS to a callback(values_dict) -> error_msg or None."""
@@ -568,7 +598,7 @@ class Overlay:
                 else:
                     out[key] = str(raw).strip()
             except (ValueError, TypeError):
-                return None, f"Bad value for {label}"
+                return None, self.tr("save.bad_value", label=self.tr(label))
         return out, None
 
     def _on_save_clicked(self):
@@ -577,17 +607,21 @@ class Overlay:
             self._show_save_msg(err, _RED)
             return
         if self._save_callback is None:
-            self._show_save_msg("Saved", _LIME)
+            self._show_save_msg(self.tr("save.saved"), _LIME)
             return
         try:
             result = self._save_callback(values)
         except Exception as exc:                   # surface callback failure
-            self._show_save_msg(f"Save failed: {exc}", _RED)
+            self._show_save_msg(self.tr("save.failed", error=exc), _RED)
             return
         if result:
-            self._show_save_msg(str(result), _RED)
+            if isinstance(result, tuple):
+                text, is_error = result
+                self._show_save_msg(str(text), _RED if is_error else _LIME)
+            else:
+                self._show_save_msg(str(result), _RED)
         else:
-            self._show_save_msg("Saved", _LIME)
+            self._show_save_msg(self.tr("save.saved"), _LIME)
 
     def _show_save_msg(self, text, color):
         self._save_msg_var.set(text)
@@ -601,10 +635,10 @@ class Overlay:
         self._save_msg_after = self.root.after(
             2500, lambda: self._save_msg_var.set(""))
 
-    def set_status(self, text: str):
+    def set_status(self, text: str, state: str | None = None):
         """Thread-safe status update."""
         try:
-            self.root.after(0, self._apply_status, text)
+            self.root.after(0, self._apply_status, text, state)
         except RuntimeError:
             pass
 

@@ -8,6 +8,7 @@ from dataclasses import asdict
 from pynput import keyboard
 from . import capture, notifier, paths, vision
 from .config import load_config, save_config
+from .i18n import normalize_language, translate
 from .overlay import Overlay
 from .sniper import GameIO, Sniper
 
@@ -49,12 +50,24 @@ def main() -> None:
     logging.getLogger("fh6").info("FH6 Sniper starting (log: %s)", log_path)
     cfg = load_config(paths.app_dir() / "config.json")
     _log_config(cfg)
-    templates = vision.load_templates(
-        paths.app_dir() / cfg.template_dir,
-        moving_background=cfg.moving_background)
+    tr = lambda key, **kwargs: translate(cfg.language, key, **kwargs)
+    template_dir = cfg.effective_template_dir()
+    try:
+        templates = vision.load_templates(
+            paths.app_dir() / template_dir,
+            moving_background=cfg.moving_background)
+    except FileNotFoundError as exc:
+        logging.getLogger("fh6").exception(
+            "template load failed for language=%s dir=%s",
+            cfg.language, template_dir)
+        raise FileNotFoundError(
+            f"{exc}. For zh-CN, capture the missing template listed in "
+            "docs/template-capture-zh-CN.md."
+        ) from exc
     io = GameIO(cfg, templates)
     overlay = Overlay(
-        hide_from_capture=not getattr(cfg, "overlay_capturable", False))
+        hide_from_capture=not getattr(cfg, "overlay_capturable", False),
+        language=cfg.language)
 
     state = {
         "sniper": None,
@@ -70,7 +83,8 @@ def main() -> None:
 
     def on_purchase(loop_seconds, total):
         notifier.log_purchase(purchase_log, "bought", loop_seconds, total)
-        notifier.notify_success(total, cfg.notify_sound, cfg.notify_toast)
+        notifier.notify_success(total, cfg.notify_sound, cfg.notify_toast,
+                                cfg.language)
 
     def on_stats(searches, bought, fails):
         last_s, last_b, last_f = state["last_bot_stats"]
@@ -89,7 +103,8 @@ def main() -> None:
         state["last_bot_stats"] = (0, 0, 0)        # new Sniper, fresh deltas
         sniper = Sniper(io, cfg, on_purchase=on_purchase,
                         on_status=overlay.set_status,
-                        on_stats=on_stats)
+                        on_stats=on_stats,
+                        tr=tr)
 
         def _run_safe():
             try:
@@ -98,7 +113,7 @@ def main() -> None:
                 logging.getLogger("fh6.main").exception(
                     "sniper thread crashed")
                 try:
-                    overlay.set_status("Crashed: see sniper.log")
+                    overlay.set_status(tr("status.crashed"), "stopped")
                 except Exception:
                     pass
 
@@ -129,11 +144,14 @@ def main() -> None:
         """Apply settings dict to cfg in-place; persist; reload as needed."""
         log = logging.getLogger("fh6.settings")
         prev_bg = cfg.moving_background
+        prev_language = cfg.language
         prev_start = cfg.hotkey_start_stop
         prev_panic = cfg.hotkey_panic
         prev_capturable = getattr(cfg, "overlay_capturable", False)
         diffs = []
         for key, value in values.items():
+            if key == "language":
+                value = normalize_language(value)
             old = getattr(cfg, key, None)
             if old != value:
                 diffs.append(f"{key} {old!r} -> {value!r}")
@@ -147,17 +165,18 @@ def main() -> None:
             save_config(cfg, paths.app_dir() / "config.json")
         except Exception as exc:
             log.exception("save_config failed")
-            return f"Could not save config: {exc}"
-        if cfg.moving_background != prev_bg:
+            return tr("error.save_config", error=exc)
+        language_changed = cfg.language != prev_language
+        if cfg.moving_background != prev_bg and not language_changed:
             try:
                 io.templates = vision.load_templates(
-                    paths.app_dir() / cfg.template_dir,
+                    paths.app_dir() / cfg.effective_template_dir(),
                     moving_background=cfg.moving_background)
                 log.info("templates reloaded (moving_background=%s)",
                          cfg.moving_background)
             except Exception as exc:
                 log.exception("template reload failed")
-                return f"Saved, but template reload failed: {exc}"
+                return tr("error.template_reload", error=exc)
         if (cfg.hotkey_start_stop != prev_start
                 or cfg.hotkey_panic != prev_panic):
             try:
@@ -168,13 +187,16 @@ def main() -> None:
                          cfg.hotkey_start_stop, cfg.hotkey_panic)
             except Exception as exc:
                 log.exception("hotkey rebind failed")
-                return f"Saved, but hotkey rebind failed: {exc}"
+                return tr("error.hotkey_rebind", error=exc)
+        if language_changed:
+            log.info("language changed: restart required")
+            return tr("save.saved_restart"), False
         return None
 
     overlay.bind_settings(cfg)
     overlay.on_save(apply_settings)
     overlay.on_toggle(toggle)
-    overlay.set_status("Idle")
+    overlay.set_status(tr("status.idle"), "stopped")
     try:
         overlay.run()
     finally:
