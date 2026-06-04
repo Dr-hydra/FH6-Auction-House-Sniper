@@ -19,7 +19,7 @@ FH6 Auction House Sniper 是一个面向 Forza Horizon 6 拍卖行的自动搜�
 - `F8` 开始/停止，`F9` 紧急停止。
 - 可按车辆数量或运行时间自动停止。
 - 识别当前菜单页面，降低误点到其他页面的概率。
-- 支持 `en-US` / `zh-CN` 双语界面和模板目录切换。
+- 支持 `en-US` / `zh-CN` 双语界面和识别资源切换。
 
 ## 重要风险
 
@@ -40,16 +40,16 @@ FH6 Auction House Sniper 是一个面向 Forza Horizon 6 拍卖行的自动搜�
 - 如果游戏以管理员权限启动，工具也需要以管理员权限运行。
 - 强烈建议使用有线网络。
 
-## 语言和模板
+## 语言
 
-程序配置项 `language` 同时控制悬浮窗语言和识别模板目录：
+程序配置项 `language` 同时控制悬浮窗语言和游戏界面识别语言：
 
-| language | 界面语言 | 模板目录 |
+| language | 界面语言 | 适用游戏语言 |
 |---|---|---|
-| `en-US` | 英文 | `templates/` |
-| `zh-CN` | 简体中文 | `templates_zh-CN/` |
+| `en-US` | 英文 | 英文 |
+| `zh-CN` | 简体中文 | 简体中文 |
 
-切换语言后需要重启程序才能应用新的模板目录。中文模板不是把图片上的英文改成中文，而是需要从中文游戏 UI 中重新截取。请按 [中文识别模板截图说明](docs/template-capture-zh-CN.md) 补齐 `templates_zh-CN/` 中的同名 PNG。
+切换语言后需要重启程序才能生效。请确保 FH6 的游戏语言与 `config.json` 中的 `language` 保持一致。
 
 ## 下载
 
@@ -106,7 +106,7 @@ Windows SmartScreen 可能会因为 exe 未签名而提示警告。若你确认�
 
 首次运行会在 exe 同级目录生成 `config.json`。常用配置：
 
-- `language`：界面和模板语言，支持 `zh-CN` 和 `en-US`。
+- `language`：界面和游戏识别语言，支持 `zh-CN` 和 `en-US`。
 - `max_cars`：买到多少辆后自动停止，默认 `1`。
 - `max_minutes`：运行多少分钟后自动停止，默认 `180`。
 - `collect_after_buyout`：设为 `false` 后不自动领取车辆。
@@ -142,15 +142,15 @@ Windows SmartScreen 可能会因为 exe 未签名而提示警告。若你确认�
 
 通常是游戏的动态背景设置与工具的 `moving_background` 设置不一致。检查 FH6 视频设置里的动态背景，并在悬浮窗设置或 `config.json` 中保持一致。
 
-**启动后提示无法恢复或语言/模板错误**
+**启动后提示无法恢复或语言错误**
 
 常见原因：
 
-- `language=zh-CN` 但 `templates_zh-CN/` 中缺少中文模板。
 - 游戏语言与工具语言不一致。
 - 悬浮窗被设置为可截图并遮挡了工具识别区域。
+- FH6 没有处于前台窗口，或被其他窗口遮挡。
 
-请先按 [中文识别模板截图说明](docs/template-capture-zh-CN.md) 补齐中文模板，并确认游戏语言与 `config.json` 中的 `language` 一致。提交问题时请附上 `sniper.log`。
+请确认游戏语言与 `config.json` 中的 `language` 一致，并让 FH6 保持在前台。提交问题时请附上 `sniper.log`。
 
 ## 许可证和署名
 
