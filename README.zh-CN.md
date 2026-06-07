@@ -1,6 +1,6 @@
 # FH6 Auction House Sniper 中文版
 
-> 本仓库是 `FH6 Auction House Sniper` 的中文本地化版本，基于原项目 [FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper) 修改，当前 fork 地址为 [Dr-hydra/FH6-Auction-House-Sniper](https://github.com/Dr-hydra/FH6-Auction-House-Sniper)。项目遵循 [GNU GPLv3](LICENSE) 发布。原作者与贡献者的署名和版权应继续保留。
+> 本仓库是 `FH6 Auction House Sniper` 的独立中文本地化衍生项目，基于原项目 [FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper) 修改。当前项目地址为 [Dr-hydra/FH6-Auction-House-Sniper](https://github.com/Dr-hydra/FH6-Auction-House-Sniper)。项目遵循 [GNU GPLv3](LICENSE) 发布，并保留原作者与贡献者的署名和版权。
 
 [English README](README.md)
 
@@ -158,4 +158,4 @@ Windows SmartScreen 可能会因为 exe 未签名而提示警告。若你确认�
 
 原项目作者：FrostyIsBored  
 原项目地址：[FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper)  
-当前 fork：[Dr-hydra/FH6-Auction-House-Sniper](https://github.com/Dr-hydra/FH6-Auction-House-Sniper)
+当前独立项目：[Dr-hydra/FH6-Auction-House-Sniper](https://github.com/Dr-hydra/FH6-Auction-House-Sniper)

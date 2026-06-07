@@ -4,6 +4,10 @@
 
 # FH6 Auction House Sniper
 
+> This is an independent localized derivative of the original
+> [FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper).
+> It preserves the original authorship and is distributed under the GNU GPLv3.
+
 ## Automated auction house sniper for Forza Horizon 6
 
 Watches the Auction House for the car you set up, buys it out the instant it appears, collects it, and loops. Set your filters once and leave it running. This tool has about a 10% buyout rate, and generally can snipe a car in under 5 mins.
@@ -56,7 +60,7 @@ If you run into any issues and need help, feel free to join the Support Server a
 
 # Download
 
-Grab the latest **FH6-Sniper.zip** from the [Releases page](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper/releases) and extract it anywhere on your PC.
+Grab the latest **FH6-Sniper.zip** from the [Releases page](https://github.com/Dr-hydra/FH6-Auction-House-Sniper/releases) and extract it anywhere on your PC.
 
 ---
 
@@ -172,5 +176,5 @@ The bot is ready to go out of the box. If you want to tweak it, open **config.js
   Switch FH6 to English under Settings > Language Select.
   - **Capturable overlay sitting over the menus.** If you've enabled **Show overlay in screenshots & recordings**, the overlay can land on top of the area the sniper is reading. Drag it to the top-right or bottom-right corner so it doesn't overlap the game UI.
 
-  If neither helps, [open an issue](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper/issues) or message me on Discord.
+  If neither helps, [open an issue](https://github.com/Dr-hydra/FH6-Auction-House-Sniper/issues) or message me on Discord.
   **When posting issues relating to the bot** - Please include your Sniper.log so that I can look into it.
