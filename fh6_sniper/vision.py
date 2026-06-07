@@ -31,6 +31,7 @@ TEMPLATE_SCREENS: dict[str, Screen] = {
     "player_options.png": Screen.PLAYER_OPTIONS,
     "buy_out.png": Screen.BUY_OUT,
     "buy_out_bgoff.png": Screen.BUY_OUT,
+    "buy_out_title.png": Screen.BUY_OUT,
     "buy_out_progress.png": Screen.BUYOUT_PROGRESS,
     "buy_out_progress_bgoff.png": Screen.BUYOUT_PROGRESS,
     "buyout_successful.png": Screen.BUYOUT_SUCCESS,
@@ -148,6 +149,7 @@ TEMPLATE_REGIONS = {
     "player_options.png":     (580, 230, 1340, 486),
     "buy_out.png":               (520, 470, 1400, 620),
     "buy_out_bgoff.png":         (520, 470, 1400, 620),
+    "buy_out_title.png":         (520, 350, 1400, 510),
     "buy_out_progress.png":      (520, 470, 1400, 620),
     "buy_out_progress_bgoff.png":(520, 470, 1400, 620),
     "buyout_successful.png":  (539, 334, 1374, 612),
@@ -161,19 +163,31 @@ TEMPLATE_REGIONS = {
 # buy_out_progress body are short text-band crops; half-res blurs the text
 # enough that live frames drop below the 0.80 threshold (~0.78 vs ~0.86).
 _FULL_RES_TEMPLATES = {
-    "buy_out.png", "buy_out_bgoff.png",
+    "buy_out.png", "buy_out_bgoff.png", "buy_out_title.png",
     "buy_out_progress.png", "buy_out_progress_bgoff.png",
     "ah_landing.png",
 }
+
+# The title band is visually stronger than the body text across backgrounds,
+# but slight bloom differences make a lower threshold more reliable.
+TEMPLATE_THRESHOLDS = {
+    "buy_out_title.png": 0.72,
+}
+
+
+def template_threshold(name: str, default: float) -> float:
+    return TEMPLATE_THRESHOLDS.get(name, default)
 
 
 def screen_scores(scene_bgr, templates: dict, targets=None) -> dict:
     """Match score per template, region-cropped. Most templates run at half
     resolution; a few small text-band templates (see _FULL_RES_TEMPLATES)
     run at full res. If `targets` is a set of Screen, only those templates
-    (plus the priority results templates) are scored."""
+    (plus the priority results templates, except for BUY_OUT) are scored."""
     if targets is not None:
-        wanted = set(_RESULTS_PRIORITY)
+        # Results remain visible behind several menus, but must not override
+        # the modal-specific BUY_OUT templates while waiting for confirmation.
+        wanted = set() if Screen.BUY_OUT in targets else set(_RESULTS_PRIORITY)
         wanted |= {n for n, scr in TEMPLATE_SCREENS.items() if scr in targets}
         templates = {n: t for n, t in templates.items() if n in wanted}
     gray = _gray(scene_bgr)
@@ -200,11 +214,26 @@ def identify_screen(scene_bgr, templates: dict, threshold: float,
     for name in _RESULTS_PRIORITY:
         if scores.get(name, 0.0) >= threshold:
             return TEMPLATE_SCREENS[name]
-    best_screen, best_score = Screen.UNKNOWN, threshold
+    if targets is not None and Screen.BUY_OUT in targets:
+        for name, score in scores.items():
+            if (TEMPLATE_SCREENS[name] == Screen.BUY_OUT
+                    and score >= template_threshold(name, threshold)):
+                return Screen.BUY_OUT
+    best_screen, best_score = Screen.UNKNOWN, -1.0
     for name, score in scores.items():
-        if score >= best_score:
+        required = template_threshold(name, threshold)
+        if score >= required and score >= best_score:
             best_screen, best_score = TEMPLATE_SCREENS[name], score
     return best_screen
+
+
+def buy_out_scores(scene_bgr, templates: dict) -> dict[str, float]:
+    """Return only the BUY_OUT template scores for lightweight diagnostics."""
+    scores = screen_scores(scene_bgr, templates, targets={Screen.BUY_OUT})
+    return {
+        name: score for name, score in scores.items()
+        if TEMPLATE_SCREENS.get(name) == Screen.BUY_OUT
+    }
 
 
 # Search-config Confirm button band at 1920x1080.

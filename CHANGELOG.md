@@ -2,6 +2,17 @@
 
 Newest changes first. Each section header is the release date.
 
+## v1.3.0 - 2026-06-07
+
+### More reliable buy-out confirmation detection
+- Added a second buy-out detector based on the dialog title. The title or
+  body template can now independently confirm that the buy-out dialog is open.
+- Added matching title templates for both English and Simplified Chinese.
+- Buy-out matching scores and effective thresholds are written to the log once
+  per confirmation attempt for lightweight troubleshooting.
+- Prevented the auction-results screen behind the modal from overriding
+  buy-out dialog detection.
+
 ## v1.2.0 - 2026-05-28
 
 ### Run the bot while doing something else (contributed by @LennardDenby)

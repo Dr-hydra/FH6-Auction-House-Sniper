@@ -58,6 +58,10 @@ class GameIO:
         frame = capture.grab_screen(self.cfg.window_title)
         return vision.slot_states(frame)
 
+    def buy_out_scores(self) -> dict[str, float]:
+        frame = capture.grab_screen(self.cfg.window_title)
+        return vision.buy_out_scores(frame, self.templates)
+
     def press(self, name: str, times: int = 1) -> None:
         log.info("press %s%s", name, f" x{times}" if times > 1 else "")
         actions.tap_key(name, times,
@@ -193,8 +197,14 @@ class Sniper:
             log.exception("auto-toggle: failed to load alternate templates")
             return False
         frame = capture.grab_screen(cfg.window_title)
+        # The title is shared by both background modes and cannot verify
+        # that the alternate body-template set is the correct one.
+        verification_templates = {
+            name: template for name, template in candidate.items()
+            if name != "buy_out_title.png"
+        }
         result = vision.identify_screen(
-            frame, candidate, cfg.match_threshold,
+            frame, verification_templates, cfg.match_threshold,
             targets={Screen.BUY_OUT, Screen.PLAYER_OPTIONS})
         if result not in (Screen.BUY_OUT, Screen.PLAYER_OPTIONS):
             log.info("auto-toggle skipped: alternate variant also doesn't "
@@ -233,6 +243,24 @@ class Sniper:
             self._poll_delay()
         log.info("wait_for %s -> TIMEOUT after %.0fs", _names(screens), timeout)
         return None
+
+    def _log_buy_out_scores(self, phase: str) -> None:
+        score_reader = getattr(self.io, "buy_out_scores", None)
+        if score_reader is None:
+            return
+        try:
+            scores = score_reader()
+        except Exception:
+            log.exception("buyout match %s: score capture failed", phase)
+            return
+        if not scores:
+            return
+        values = ", ".join(
+            f"{name.removesuffix('.png')}="
+            f"{score:.3f}/{vision.template_threshold(name, self.cfg.match_threshold):.3f}"
+            for name, score in sorted(scores.items())
+        )
+        log.info("buyout match %s: %s", phase, values)
 
     def _press_until(self, key, from_screen, targets,
                      settle: float = 0.7, reach: float = 8.0,
@@ -524,11 +552,13 @@ class Sniper:
         # whenever the moving_background flag is wrong and the templates
         # never match.
         seen = self.wait_for({Screen.BUY_OUT, Screen.PLAYER_OPTIONS}, 1.0)
+        self._log_buy_out_scores("primary")
         if seen == Screen.PLAYER_OPTIONS:
             return self._escape_player_options()
         if seen is None and self._try_toggle_moving_background():
             seen = self.wait_for(
                 {Screen.BUY_OUT, Screen.PLAYER_OPTIONS}, 1.0)
+            self._log_buy_out_scores("auto-toggle")
             if seen == Screen.PLAYER_OPTIONS:
                 return self._escape_player_options()
         if seen is None:
