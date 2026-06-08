@@ -1,12 +1,12 @@
-[![Support on Ko-fi](https://img.shields.io/badge/Support_on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/frostyisbored) [![Need help? Join the Discord](https://img.shields.io/badge/Need_help%3F-Join_the_Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/PWPmVWdP8r)
-
-[中文说明 / Chinese README](README.zh-CN.md)
+[中文说明 / Chinese README](README.md)
 
 # FH6 Auction House Sniper
 
-> This is an independent localized derivative of the original
-> [FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper).
-> It preserves the original authorship and is distributed under the GNU GPLv3.
+> This is an independent localized derivative based on the original project
+> published by FrostyIsBored. This version is independently maintained by
+> Dr-hydra; the original author does not maintain or support this version.
+> It is distributed under the GNU GPLv3 with the required origin and copyright
+> notices preserved.
 
 ## Automated auction house sniper for Forza Horizon 6
 
@@ -29,12 +29,6 @@ Watches the Auction House for the car you set up, buys it out the instant it app
 - F8 start/stop, F9 panic stop
 - Auto-stops after a set number of cars or minutes
 - Smart page awareness to stop accidental misclicks to other pages
-
----
-
-# Support
-
-If you run into any issues and need help, feel free to join the Support Server and create a Post in #Get-Help and I'll take a look. https://discord.gg/PWPmVWdP8r
 
 ---
 
@@ -175,6 +169,3 @@ The bot is ready to go out of the box. If you want to tweak it, open **config.js
   - **Game language is not English.** The sniper's templates only match the English UI.
   Switch FH6 to English under Settings > Language Select.
   - **Capturable overlay sitting over the menus.** If you've enabled **Show overlay in screenshots & recordings**, the overlay can land on top of the area the sniper is reading. Drag it to the top-right or bottom-right corner so it doesn't overlap the game UI.
-
-  If neither helps, [open an issue](https://github.com/Dr-hydra/FH6-Auction-House-Sniper/issues) or message me on Discord.
-  **When posting issues relating to the bot** - Please include your Sniper.log so that I can look into it.
