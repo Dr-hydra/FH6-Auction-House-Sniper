@@ -1,180 +1,161 @@
-[![Support on Ko-fi](https://img.shields.io/badge/Support_on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/frostyisbored) [![Need help? Join the Discord](https://img.shields.io/badge/Need_help%3F-Join_the_Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/PWPmVWdP8r)
+# FH6 Auction House Sniper 中文版
 
-[中文说明 / Chinese README](README.zh-CN.md)
+> 本仓库是 `FH6 Auction House Sniper` 的独立中文本地化衍生项目，基于原项目 [FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper) 修改。当前项目地址为 [Dr-hydra/FH6-Auction-House-Sniper](https://github.com/Dr-hydra/FH6-Auction-House-Sniper)。项目遵循 [GNU GPLv3](LICENSE) 发布，并保留原作者与贡献者的署名和版权。
 
-# FH6 Auction House Sniper
+[English README](README.md)
 
-> This is an independent localized derivative of the original
-> [FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper).
-> It preserves the original authorship and is distributed under the GNU GPLv3.
+## 项目简介
 
-## Automated auction house sniper for Forza Horizon 6
+FH6 Auction House Sniper 是一个面向 Forza Horizon 6 拍卖行的自动搜索和一口价工具。它会按照你在游戏中设置好的筛选条件循环搜索车辆，在目标出现时尝试立即买断，买到后可自动领取车辆并继续循环。
 
-Watches the Auction House for the car you set up, buys it out the instant it appears, collects it, and loops. Set your filters once and leave it running. This tool has about a 10% buyout rate, and generally can snipe a car in under 5 mins.
+原 README 提到该工具约有 10% 的买断成功率，通常可在 5 分钟内尝试狙击到一辆车。实际效果会受到电脑性能、网络、游戏服务器响应和菜单动画速度影响。
 
+## 功能
 
+- 自动搜索并尝试一口价买断。
+- 跳过已售出的列表，继续寻找可买车辆。
+- 买到车辆后可自动领取。
+- 左上角常驻悬浮窗显示实时统计。
+- `F8` 开始/停止，`F9` 紧急停止。
+- 可按车辆数量或运行时间自动停止。
+- 识别当前菜单页面，降低误点到其他页面的概率。
+- 支持 `en-US` / `zh-CN` 双语界面和识别资源切换。
 
-<img width="1655" height="792" alt="image-3" src="https://github.com/user-attachments/assets/61b58048-c3e6-4156-9510-0c2600aa7e9f" />
-<img width="340" height="488" alt="image" src="https://github.com/user-attachments/assets/d594b885-9e5d-4519-bbea-182a3d99999b" />
-
-
----
-
-# Features
-
-- Automatic search and buyout
-- Skips past sold listings to find a fresh one
-- Auto-collects every car you win
-- Tiny always-on-top overlay with live stats
-- F8 start/stop, F9 panic stop
-- Auto-stops after a set number of cars or minutes
-- Smart page awareness to stop accidental misclicks to other pages
-
----
-
-# Support
-
-If you run into any issues and need help, feel free to join the Support Server and create a Post in #Get-Help and I'll take a look. https://discord.gg/PWPmVWdP8r
-
----
-
-# Requirements
-
-- Windows 10 or 11
-- Forza Horizon 6 on PC
-- 1920 x 1080 resolution - Full Screen, uncapped Frame Rate (You may need to change your windows settings to match)
-- Very Low graphics preset
-- Moving background turned **ON** (Or set to false in config file)
-- UI scaling set to **100**
-- Game Language set to English
-- Keyboard menu navigation (the bot uses keys, not the mouse)
-- If your forza has been launched with elevated permissions, youll need to launch the bot as an Administrator (Right click + Run as admin)
-- Wired ethernet strongly recommended
-
-<img width="1386" height="763" alt="image-4" src="https://github.com/user-attachments/assets/fd2bf173-259f-4458-938b-2267144ce3ab" />
-<img width="1386" height="758" alt="image-5" src="https://github.com/user-attachments/assets/34f3fe88-9575-4ec5-aa6c-0c9e04a9964c" />
-
-
-
----
-
-# Download
-
-Grab the latest **FH6-Sniper.zip** from the [Releases page](https://github.com/Dr-hydra/FH6-Auction-House-Sniper/releases) and extract it anywhere on your PC.
-
----
-
-# Setup
-
-## Step 1 - Open the Auction House
-
-Launch Forza Horizon 6 and head into the Auction House at the festival site.
-
-<img width="1916" height="971" alt="image-1" src="https://github.com/user-attachments/assets/2e4c412e-974e-4bf4-9d4d-bbc31fcd2432" />
-
----
-
-## Step 2 - Configure your search
-
-Open **Search Auctions** and set your filters:
-
-- **Make** and **Model** for the car you want
-- **Max Buyout** as your safety net. The bot buys the first matching car without looking at the price, so this is the most you can spend per car. Set it carefully.
-
-Back out so the screen sits on the **Search config** view. That's where the bot expects to start.
-
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/7fac68c0-f89d-45ee-a10a-5133b02da681" />
-
----
-
-## Step 3 - Run the sniper
-
-Double-click **FH6-Sniper.exe**. A small overlay appears in the top-left of your screen.
-
-Click back into FH6, press **F8** or **Start**, and leave it running.
-
-To stop: **F8** again, **F9** for panic, or click **STOP** on the overlay.
-
-<img width="1902" height="1062" alt="image-2" src="https://github.com/user-attachments/assets/ccdfba46-4c90-42de-bb79-fe26658bb262" />
-
----
-
-# SmartScreen Warning
-
-Windows SmartScreen will warn you because the exe isn't signed. To run anyway:
-
-1. Click **More info**
-2. Click **Run anyway**
-
----
-
-# Hotkeys
-
-| Key | Action |
-|---|---|
-| **F8** | Start / stop |
-| **F9** | Panic stop |
-| **STOP** button | Same as F8 |
-| **✕** on overlay | Close and exit |
-
----
-
-# Settings
-
-The bot is ready to go out of the box. If you want to tweak it, open **config.json** (created next to the exe on first run):
-
-- **max_cars** - auto-stop after this many wins (default: 1)
-- **max_minutes** - auto-stop after this many minutes (default: 180)
-- **collect_after_buyout** - set to `false` if you'd rather collect cars manually
-- **notify_sound** / **notify_toast** - turn the win beep or toast off
-- **buyout_select_delay_ms** - extra ms between selecting Buy Out and pressing Enter. Bump to `200` if the bot occasionally opens the Place Bid dialog instead of Buy Out (default: 0)
-- **moving_background** - set to `false` if you have FH6's moving background video setting turned **off** (default: true)
-
----
-
-# Important
+## 重要风险
 
 > [!WARNING]
-> - Auction House automation may violate Forza's Enforcement Guidelines.
-> - Results may vary depending on PC/Network setups. 
-> - You risk a warning, suspension, or a permanent ban.
-> - Use at your own risk.
+> - 拍卖行自动化可能违反 Forza 的 Enforcement Guidelines。
+> - 你可能面临警告、封禁、永久封禁或其他账号风险。
+> - 本工具没有任何成功率或安全性保证。
+> - 请自行承担使用风险。
 
----
+## 系统要求
 
-# Notes
+- Windows 10 或 Windows 11。
+- PC 版 Forza Horizon 6。
+- 分辨率 `1920 x 1080`，全屏，帧率不锁定。
+- 图形预设建议设为 Very Low。
+- UI 缩放设为 `100`。
+- 使用键盘菜单导航；工具通过按键操作，不使用鼠标点击。
+- 如果游戏以管理员权限启动，工具也需要以管理员权限运行。
+- 强烈建议使用有线网络。
 
-- The bot only runs while FH6 is the focused window. The overlay shows **Paused** if you tab out. Click back into the game to resume.
-- The overlay is hidden from screen capture, so you can leave it anywhere on screen.
-- Drag the overlay by clicking and holding the header.
-- You won't win every snipe. The bot is limited by FH6's menu animations and the auction server response, same as any other tool.
-- If servers are slow / overloaded it will cause the bot to break (Shall have a fix for it soon)
----
+## 语言
 
-# Troubleshooting
+程序配置项 `language` 同时控制悬浮窗语言和游戏界面识别语言：
 
-**Overlay says "Paused"** - FH6 isn't focused. Click into the game.
+| language | 界面语言 | 适用游戏语言 |
+|---|---|---|
+| `en-US` | 英文 | 英文 |
+| `zh-CN` | 简体中文 | 简体中文 |
 
-**F8 doesn't do anything** - another app on your PC might be hooking the F8 key. Close it, or change the hotkey in `config.json`.
+切换语言后需要重启程序才能生效。请确保 FH6 的游戏语言与 `config.json` 中的 `language` 保持一致。
 
-**Bot misses a screen and just sits there** - restart FH6 and the bot. Make sure your graphics preset is **Very Low** and your resolution is **1920 x 1080**.
+## 下载
 
-  **The sniper opens the Buy Out dialog but won't click Yes.**
-  <img width="1513" height="840" alt="image" src="https://github.com/user-attachments/assets/61472f11-389c-47f9-90e3-197530331486" />
+从 Releases 页面下载最新的 `FH6-Sniper.zip`，解压到电脑上的任意目录。
 
+如果你从源码运行，请安装依赖：
 
-  Almost always a mismatch between FH6's **Moving Background** video setting and the sniper's. If you've turned moving backgrounds off in-game, open the **Settings** tab in  the overlay and untick **Moving background mode** so the sniper loads the right templates for your setup.
+```powershell
+pip install -r requirements.txt
+```
 
-  <img width="331" height="472" alt="image" src="https://github.com/user-attachments/assets/049c4dab-a718-4cab-882e-d45782f5391c" />
+## 使用步骤
 
+### 1. 打开拍卖行
 
-  **The sniper says "Stopped: could not recover" right after Start.**
+启动 Forza Horizon 6，进入嘉年华站点的拍卖行。
 
-  Two common causes:
+### 2. 配置搜索条件
 
-  - **Game language is not English.** The sniper's templates only match the English UI.
-  Switch FH6 to English under Settings > Language Select.
-  - **Capturable overlay sitting over the menus.** If you've enabled **Show overlay in screenshots & recordings**, the overlay can land on top of the area the sniper is reading. Drag it to the top-right or bottom-right corner so it doesn't overlap the game UI.
+打开搜索拍卖并设置筛选条件：
 
-  If neither helps, [open an issue](https://github.com/Dr-hydra/FH6-Auction-House-Sniper/issues) or message me on Discord.
-  **When posting issues relating to the bot** - Please include your Sniper.log so that I can look into it.
+- `Make` / `Model`：你要找的车辆品牌和型号。
+- `Max Buyout`：最高一口价上限。工具会买断第一个匹配车辆，不会再判断价格，所以必须谨慎设置。
+
+设置完成后退回到搜索配置页面。工具预期从这个页面开始运行。
+
+### 3. 启动工具
+
+双击 `FH6-Sniper.exe`。屏幕左上角会出现一个小悬浮窗。
+
+点击回到 FH6，按 `F8` 或悬浮窗里的开始按钮启动。停止方式：
+
+- 再按一次 `F8`。
+- 按 `F9` 紧急停止。
+- 点击悬浮窗里的停止按钮。
+
+## SmartScreen 提示
+
+Windows SmartScreen 可能会因为 exe 未签名而提示警告。若你确认要运行：
+
+1. 点击 `More info`。
+2. 点击 `Run anyway`。
+
+## 快捷键
+
+| 按键 | 动作 |
+|---|---|
+| `F8` | 开始 / 停止 |
+| `F9` | 紧急停止 |
+| 悬浮窗停止按钮 | 等同于 `F8` |
+| 悬浮窗关闭按钮 | 关闭并退出 |
+
+## 设置
+
+首次运行会在 exe 同级目录生成 `config.json`。常用配置：
+
+- `language`：界面和游戏识别语言，支持 `zh-CN` 和 `en-US`。
+- `max_cars`：买到多少辆后自动停止，默认 `1`。
+- `max_minutes`：运行多少分钟后自动停止，默认 `180`。
+- `collect_after_buyout`：设为 `false` 后不自动领取车辆。
+- `notify_sound` / `notify_toast`：控制成功提示音和 Windows 通知。
+- `buyout_select_delay_ms`：选择一口价后再按确认的额外延迟。若工具偶尔打开出价窗口而不是一口价窗口，可尝试设为 `200`。
+- `moving_background`：如果游戏里关闭了动态背景，请设为 `false`。
+- `overlay_capturable`：是否允许悬浮窗出现在截图和录屏里。通常保持关闭，避免遮挡识别区域。
+- `win32_api_input`：使用 Win32 API 后台按键。开启后 FH6 不在前台时也可继续按键，但游戏仍需运行且不能最小化。
+
+## 注意事项
+
+- 工具默认只在 FH6 是前台窗口时运行。切出游戏后悬浮窗会显示暂停。
+- 悬浮窗默认不会进入截图/录屏，避免被识别逻辑误匹配。
+- 可以按住悬浮窗标题区域拖动位置。
+- 你不会赢下每一次狙击。工具和人工一样受菜单动画与拍卖服务器响应限制。
+- 如果服务器很慢或过载，工具可能卡住或恢复失败。
+
+## 排错
+
+**悬浮窗显示“已暂停：FH6 未处于前台”**
+
+点击回到游戏窗口。
+
+**按 F8 没反应**
+
+可能有其他程序占用了 `F8`。关闭相关程序，或在 `config.json` 中修改快捷键。
+
+**工具漏识别某个页面并卡住**
+
+重启 FH6 和工具。确认图形预设为 Very Low，分辨率为 `1920 x 1080`，UI 缩放为 `100`。
+
+**一口价确认窗口打开了，但工具不会确认**
+
+通常是游戏的动态背景设置与工具的 `moving_background` 设置不一致。检查 FH6 视频设置里的动态背景，并在悬浮窗设置或 `config.json` 中保持一致。
+
+**启动后提示无法恢复或语言错误**
+
+常见原因：
+
+- 游戏语言与工具语言不一致。
+- 悬浮窗被设置为可截图并遮挡了工具识别区域。
+- FH6 没有处于前台窗口，或被其他窗口遮挡。
+
+请确认游戏语言与 `config.json` 中的 `language` 一致，并让 FH6 保持在前台。提交问题时请附上 `sniper.log`。
+
+## 许可证和署名
+
+本中文本地化版本遵循 GNU GPLv3。你可以在 GPLv3 条款下复制、分发和修改本项目；分发修改版时应保留许可证、保留原作者署名，并明确说明你做过修改。
+
+原项目作者：FrostyIsBored  
+原项目地址：[FrostyIsBored/FH6-Auction-House-Sniper](https://github.com/FrostyIsBored/FH6-Auction-House-Sniper)  
+当前独立项目：[Dr-hydra/FH6-Auction-House-Sniper](https://github.com/Dr-hydra/FH6-Auction-House-Sniper)
